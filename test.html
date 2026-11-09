@@ -13,6 +13,8 @@
     import { runStoreTests } from './tests/store.test.js';
     import { filterItems } from './js/filter-engine.js';
     import { runFilterTests } from './tests/filter.test.js';
+    import { AIEngine } from './js/ai-engine.js';
+    import { runAITests } from './tests/ai.test.js';
 
     let allResults = [];
     const storeResults = runStoreTests(Store);
@@ -21,6 +23,9 @@
     const items = Store.getItems();
     const filterResults = runFilterTests(filterItems, items);
     allResults = allResults.concat(filterResults);
+
+    const aiResults = runAITests(AIEngine, items);
+    allResults = allResults.concat(aiResults);
 
     const output = document.getElementById('output');
     output.textContent = JSON.stringify(allResults, null, 2);
