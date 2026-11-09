@@ -2,6 +2,7 @@
 import { Store } from './store.js';
 import { filterItems } from './filter-engine.js';
 import { AIEngine } from './ai-engine.js';
+import { Security } from './security.js';
 import { Gamification } from './components/gamification.js';
 import { Navbar } from './components/navbar.js';
 import { HeroAI } from './components/hero-ai.js';
@@ -319,7 +320,11 @@ class UniAppController {
     const title = document.getElementById('post-title').value;
     const category = document.getElementById('post-category').value;
     const condition = document.getElementById('post-condition').value;
-    const price = Number(document.getElementById('post-price').value || 0);
+    const priceValidation = Security.validatePrice(price);
+    if (!priceValidation.valid) {
+      alert(`⚠️ 刊登失敗：${priceValidation.error}`);
+      return;
+    }
     const tradeType = document.getElementById('post-trade-type').value;
     const meetup = document.getElementById('post-meetup').value;
     const desc = document.getElementById('post-desc').value;
@@ -377,9 +382,10 @@ class UniAppController {
     const text = input ? input.value.trim() : '';
     if (!text) return;
 
-    // 個資檢測
-    if (/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/.test(text)) {
-      alert('⚠️ 安全警語：為保護個人隱私，問答區禁止公開留言手機號碼！請改於站內私訊聯繫。');
+    // 個資隱私防護檢驗 (PII Security Guard)
+    const piiCheck = Security.checkPiiLeakage(text);
+    if (piiCheck.hasLeakage) {
+      alert(`⚠️ 安全警語：為保護個人隱私，公開問答禁止洩漏聯絡個資！\n\n• ${piiCheck.violations.map(v => v.message).join('\n• ')}\n\n請改以站內安全聊聊約定。`);
       return;
     }
 
@@ -414,6 +420,16 @@ class UniAppController {
   }
 
   onChangeListingStatus(itemId, newStatus) {
+    const item = Store.getItemById(itemId);
+    if (!item) return;
+
+    const transitionCheck = Security.validateStatusTransition(item.status, newStatus, 'seller');
+    if (!transitionCheck.allowed) {
+      alert(`⚠️ 狀態切換受阻：${transitionCheck.error}`);
+      this.openUserCenterModal();
+      return;
+    }
+
     Store.updateItemStatus(itemId, newStatus);
     this.openUserCenterModal();
     this.renderProductGrid();

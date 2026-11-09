@@ -1,5 +1,6 @@
 // js/components/product-modal.js - 商品詳情、以物易物申請、面交地標與公開問答彈窗
 import { Store } from '../store.js';
+import { Security } from '../security.js';
 
 export const ProductModal = {
   render(itemId) {
@@ -7,9 +8,20 @@ export const ProductModal = {
     if (!item) return '';
 
     const seller = item.seller || { name: '同學', school: item.school, rating: 5.0, verifiedEdu: true, mascot: '🐶' };
-    const isFree = item.price === 0 || item.tradeType.includes('贈送');
+    const isFree = item.price === 0 || (item.tradeType && item.tradeType.includes('贈送'));
     const isWishlisted = Store.isWishlisted(item.id);
     const questions = item.questions || [];
+
+    const safeTitle = Security.escapeHtml(item.title);
+    const safeDesc = Security.escapeHtml(item.description);
+    const safeCategory = Security.escapeHtml(item.category);
+    const safeCondition = Security.escapeHtml(item.condition);
+    const safeStatus = Security.escapeHtml(item.status);
+    const safeSchool = Security.escapeHtml(item.school);
+    const safeMeetup = Security.escapeHtml(item.meetupLocation);
+    const safeSellerName = Security.escapeHtml(seller.name);
+    const safeDept = Security.escapeHtml(seller.department || '在校學生');
+    const safeTargetItem = item.exchangeWish ? Security.escapeHtml(item.exchangeWish.targetItem) : '';
 
     return `
       <div id="product-detail-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 z-50 overflow-y-auto animate-fade-in" onclick="if(event.target === this) window.UniApp.closeModal()">
@@ -40,18 +52,18 @@ export const ProductModal = {
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-md">
-                  ${item.category}
+                  ${safeCategory}
                 </span>
                 <span class="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                  新舊度：${item.condition}
+                  新舊度：${safeCondition}
                 </span>
                 <span class="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md">
-                  狀態：${item.status}
+                  狀態：${safeStatus}
                 </span>
               </div>
 
               <h2 class="text-lg md:text-xl font-extrabold text-slate-900 dark:text-slate-100">
-                ${item.title}
+                ${safeTitle}
               </h2>
 
               <div class="flex items-baseline gap-2 pt-1">
@@ -83,7 +95,7 @@ export const ProductModal = {
                   <span>🔄</span> 賣家以物易物心願：
                 </div>
                 <div class="text-slate-700 dark:text-slate-200 font-medium">
-                  目標物品：<span class="font-bold text-purple-600 dark:text-purple-400">${item.exchangeWish.targetItem}</span>
+                  目標物品：<span class="font-bold text-purple-600 dark:text-purple-400">${safeTargetItem}</span>
                 </div>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">
                   ${item.exchangeWish.acceptPriceDiff ? `✓ 賣家願意接受補差價 (約 ±$${item.exchangeWish.priceDiffRange || 100} 元)` : '✕ 賣家希望等價物品交換，不另補差價'}
@@ -94,7 +106,7 @@ export const ProductModal = {
             <!-- Description -->
             <div class="space-y-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-850 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
               <span class="font-bold block text-slate-900 dark:text-slate-100">商品完整說明：</span>
-              <p class="whitespace-pre-line">${item.description}</p>
+              <p class="whitespace-pre-line">${safeDesc}</p>
             </div>
 
             <!-- Campus Meetup Location & Map Indicator -->
@@ -108,7 +120,7 @@ export const ProductModal = {
                 </span>
               </div>
               <div class="font-semibold text-indigo-600 dark:text-indigo-400 text-sm">
-                ${item.school} · ${item.meetupLocation}
+                ${safeSchool} · ${safeMeetup}
               </div>
               <p class="text-[11px] text-slate-400">
                 ⚠️ 校園面交提醒：優先約在校園總圖門口、學生餐廳、校門警衛室等燈光明亮且人流充足地點。
@@ -123,10 +135,10 @@ export const ProductModal = {
                 </div>
                 <div>
                   <div class="flex items-center gap-1.5">
-                    <span class="font-bold text-slate-900 dark:text-slate-100 text-sm">${seller.name}</span>
+                    <span class="font-bold text-slate-900 dark:text-slate-100 text-sm">${safeSellerName}</span>
                     ${seller.verifiedEdu ? '<span class="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-300">EDU 信箱已認證 ✓</span>' : ''}
                   </div>
-                  <span class="text-[11px] text-slate-500">${seller.school} · ${seller.department || '在校學生'}</span>
+                  <span class="text-[11px] text-slate-500">${safeSchool} · ${safeDept}</span>
                 </div>
               </div>
               <div class="text-right">
@@ -156,24 +168,29 @@ export const ProductModal = {
               <div class="space-y-2">
                 ${questions.length === 0 ? `
                   <p class="text-xs text-slate-400 text-center py-2">目前尚無同學提問，點擊上方即可搶先留言！</p>
-                ` : questions.map(q => `
-                  <div class="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs space-y-1.5">
-                    <div class="flex items-center justify-between text-slate-500">
-                      <span class="font-bold text-slate-700 dark:text-slate-300">🙋 ${q.author}：</span>
-                      <span class="text-[10px]">公開提問</span>
-                    </div>
-                    <p class="text-slate-800 dark:text-slate-200 pl-4 border-l-2 border-indigo-400">${q.text}</p>
-                    ${q.answer ? `
-                      <div class="mt-1 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-indigo-700 dark:text-indigo-400 pl-4">
-                        <span class="font-bold">賣家回覆：</span>${q.answer}
+                ` : questions.map(q => {
+                  const safeAuthor = Security.escapeHtml(q.author);
+                  const safeQuestion = Security.escapeHtml(q.text);
+                  const safeAnswer = q.answer ? Security.escapeHtml(q.answer) : null;
+                  return `
+                    <div class="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs space-y-1.5">
+                      <div class="flex items-center justify-between text-slate-500">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🙋 ${safeAuthor}：</span>
+                        <span class="text-[10px]">公開提問</span>
                       </div>
-                    ` : `
-                      <button onclick="window.UniApp.replyQuestion('${item.id}', '${q.id}')" class="text-[11px] text-indigo-600 hover:underline">
-                        賣家回覆...
-                      </button>
-                    `}
-                  </div>
-                `).join('')}
+                      <p class="text-slate-800 dark:text-slate-200 pl-4 border-l-2 border-indigo-400">${safeQuestion}</p>
+                      ${safeAnswer ? `
+                        <div class="mt-1 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-indigo-700 dark:text-indigo-400 pl-4">
+                          <span class="font-bold">賣家回覆：</span>${safeAnswer}
+                        </div>
+                      ` : `
+                        <button onclick="window.UniApp.replyQuestion('${item.id}', '${q.id}')" class="text-[11px] text-indigo-600 hover:underline">
+                          賣家回覆...
+                        </button>
+                      `}
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
 

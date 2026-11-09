@@ -1,11 +1,19 @@
 // js/components/product-card.js - 商品卡片渲染元件
 import { Store } from '../store.js';
+import { Security } from '../security.js';
 
 export const ProductCard = {
-  render(item, isCurrentUser NTU = false) {
+  render(item) {
     const isWishlisted = Store.isWishlisted(item.id);
     const seller = item.seller || { name: '同學', school: item.school, rating: 5.0, verifiedEdu: true, mascot: '🐶' };
-    const isFree = item.price === 0 || item.tradeType.includes('贈送');
+    const isFree = item.price === 0 || (item.tradeType && item.tradeType.includes('贈送'));
+
+    const safeTitle = Security.escapeHtml(item.title);
+    const safeDesc = Security.escapeHtml(item.description);
+    const safeSellerName = Security.escapeHtml(seller.name);
+    const safeCategory = Security.escapeHtml(item.category);
+    const safeCondition = Security.escapeHtml(item.condition);
+    const safeLocation = Security.escapeHtml(item.meetupLocation ? item.meetupLocation.split('/')[0].trim() : item.school);
 
     // 交易方式色彩
     let tradeBadgeClass = 'bg-indigo-600 text-white';
@@ -55,17 +63,17 @@ export const ProductCard = {
           <div class="space-y-1.5">
             <div class="flex items-center justify-between gap-1">
               <span class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md">
-                ${item.category} · ${item.condition}
+                ${safeCategory} · ${safeCondition}
               </span>
               ${statusBadge}
             </div>
 
             <h3 class="font-bold text-xs md:text-sm text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-indigo-600 transition-colors">
-              ${item.title}
+              ${safeTitle}
             </h3>
 
             <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
-              ${item.description}
+              ${safeDesc}
             </p>
           </div>
 
@@ -94,12 +102,12 @@ export const ProductCard = {
           <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
             <div class="flex items-center gap-1.5">
               <span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs">${seller.mascot || '🐶'}</span>
-              <span class="font-medium text-slate-700 dark:text-slate-300">${seller.name}</span>
+              <span class="font-medium text-slate-700 dark:text-slate-300">${safeSellerName}</span>
               ${seller.verifiedEdu ? '<span class="text-emerald-600 font-bold" title="已通過 .edu.tw 身分驗證">✓</span>' : ''}
               <span class="text-[10px] text-amber-500 font-bold">★${seller.rating || 5.0}</span>
             </div>
             <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
-              📍 ${item.meetupLocation ? item.meetupLocation.split('/')[0].trim() : item.school}
+              📍 ${safeLocation}
             </span>
           </div>
         </div>
