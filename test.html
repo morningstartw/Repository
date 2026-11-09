@@ -11,10 +11,16 @@
   <script type="module">
     import { Store } from './js/store.js';
     import { runStoreTests } from './tests/store.test.js';
+    import { filterItems } from './js/filter-engine.js';
+    import { runFilterTests } from './tests/filter.test.js';
 
     let allResults = [];
     const storeResults = runStoreTests(Store);
     allResults = allResults.concat(storeResults);
+
+    const items = Store.getItems();
+    const filterResults = runFilterTests(filterItems, items);
+    allResults = allResults.concat(filterResults);
 
     const output = document.getElementById('output');
     output.textContent = JSON.stringify(allResults, null, 2);
