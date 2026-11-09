@@ -1,12 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-  <meta charset="utf-8">
-  <title>UniSwap Automated Test Runner</title>
+  <meta charset="UTF-8">
+  <title>UniSwap AI - 視覺化自動測試套件 (Automated Test Runner)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
 </head>
-<body>
-  <h1>Test Suite Results</h1>
-  <pre id="output">Running...</pre>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6 antialiased">
+  <div class="max-w-4xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🧪</span>
+          <h1 class="text-xl font-bold">UniSwap AI 全自動化測試套件</h1>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">
+          涵蓋資料層 (Store)、篩選排序引擎 (Filter)、4 大 AI 運算 (AI Engine) 與全流程整合驗證
+        </p>
+      </div>
+      <div id="summary-badge" class="px-4 py-2 rounded-2xl bg-slate-200 text-slate-700 text-xs font-bold animate-pulse">
+        測試執行中...
+      </div>
+    </div>
+
+    <!-- Test Suites Grid -->
+    <div id="test-results-container" class="space-y-3">
+      <!-- Dynamically filled by runner -->
+    </div>
+
+    <!-- Back to App Link -->
+    <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+      <a href="index.html" class="text-indigo-600 font-bold hover:underline flex items-center gap-1">
+        <span>←</span> 返回 UniSwap 首頁好物
+      </a>
+      <span class="text-slate-400">執行環境：現代瀏覽器 ES6 Modules / 零外掛依賴</span>
+    </div>
+
+  </div>
 
   <script type="module">
     import { Store } from './js/store.js';
@@ -15,6 +46,8 @@
     import { runFilterTests } from './tests/filter.test.js';
     import { AIEngine } from './js/ai-engine.js';
     import { runAITests } from './tests/ai.test.js';
+    import { Gamification } from './js/components/gamification.js';
+    import { runIntegrationTests } from './tests/integration.test.js';
 
     let allResults = [];
     const storeResults = runStoreTests(Store);
@@ -27,9 +60,36 @@
     const aiResults = runAITests(AIEngine, items);
     allResults = allResults.concat(aiResults);
 
-    const output = document.getElementById('output');
-    output.textContent = JSON.stringify(allResults, null, 2);
-    console.log('TEST_RESULTS_READY', JSON.stringify(allResults));
+    const integrationResults = runIntegrationTests(Store, filterItems, AIEngine, Gamification);
+    allResults = allResults.concat(integrationResults);
+
+    // Render results
+    const container = document.getElementById('test-results-container');
+    const passedCount = allResults.filter(r => r.passed).length;
+    const totalCount = allResults.length;
+    const allPassed = passedCount === totalCount;
+
+    const summaryBadge = document.getElementById('summary-badge');
+    summaryBadge.className = allPassed 
+      ? 'px-4 py-2 rounded-2xl bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-black'
+      : 'px-4 py-2 rounded-2xl bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-black';
+    summaryBadge.innerText = allPassed 
+      ? `✓ 全部通過 (${passedCount}/${totalCount}) Passed`
+      : `✕ 測試失敗 (${passedCount}/${totalCount})`;
+
+    container.innerHTML = allResults.map((t, idx) => `
+      <div class="p-3 rounded-xl border ${t.passed ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20' : 'border-rose-300 bg-rose-50'} flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="${t.passed ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${t.passed ? '✓' : '✕'}</span>
+          <span class="font-medium text-slate-800 dark:text-slate-200">#${idx + 1} ${t.name}</span>
+        </div>
+        <span class="text-[11px] font-mono ${t.passed ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 font-bold'}">
+          ${t.passed ? 'PASSED' : `FAILED: ${t.error}`}
+        </span>
+      </div>
+    `).join('');
+
+    console.log('ALL_TESTS_COMPLETE', JSON.stringify(allResults));
   </script>
 </body>
 </html>

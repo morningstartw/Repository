@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniSwap AI - 全國大學生二手物品交換與買賣平台</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* 隱藏滾動條但保持滾動 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes bounce-slow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .animate-bounce-slow { animation: bounce-slow 2s infinite ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Main App Wrapper -->
+  <div class="flex-1 pb-16 md:pb-6">
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-5 space-y-5">
+      
+      <!-- Gamification Top Banner (EXP & Level) -->
+      <section id="gamification-container"></section>
+
+      <!-- Campus Animal Mascot Bar -->
+      <section id="mascot-filter-container"></section>
+
+      <!-- AI-First Hero Search & Multi-facet Filter -->
+      <section id="hero-ai-container"></section>
+
+      <!-- Products Feed Section -->
+      <section class="space-y-4 pt-2">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div class="flex items-center gap-2">
+            <h2 class="text-base md:text-lg font-black tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <span>🎯</span> 校園好物流
+            </h2>
+            <span id="product-count" class="text-xs font-semibold text-slate-500 bg-slate-200/60 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+              載入中...
+            </span>
+          </div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>面交已啟動 EDU 校園信箱驗證安全防護</span>
+          </div>
+        </div>
+
+        <!-- Product Cards Grid -->
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <!-- Dynamically populated by js/app.js -->
+        </div>
+
+        <!-- Empty State (Shown when 0 matches) -->
+        <div id="empty-state" class="hidden py-16 text-center space-y-3 bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-6">
+          <div class="text-5xl animate-bounce-slow">🔍</div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">找不到符合條件的商品！</h3>
+          <p class="text-xs text-slate-500 max-w-md mx-auto">
+            試試放寬價格上限、更換分類，或點擊下方按鈕一鍵重設所有篩選條件。
+          </p>
+          <div class="pt-2">
+            <button onclick="window.UniApp.resetAllFilters()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-transform active:scale-95">
+              重設所有篩選看全部
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal Container Root (Detail, Post, UserCenter, Admin) -->
+  <div id="modal-root"></div>
+
+  <!-- Mobile Bottom Sticky Navigation Bar -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-around text-xs">
+    <button onclick="window.UniApp.resetAllFilters()" class="flex flex-col items-center gap-0.5 text-indigo-600 font-bold">
+      <span class="text-lg">🏠</span>
+      <span class="text-[10px]">首頁好物</span>
+    </button>
+    <button onclick="document.getElementById('ai-search-input')?.focus(); window.scrollTo({top: 150, behavior: 'smooth'});" class="flex flex-col items-center gap-0.5 text-slate-500">
+      <span class="text-lg">✨</span>
+      <span class="text-[10px]">AI 尋寶</span>
+    </button>
+    <button onclick="window.UniApp.openPostModal()" class="flex flex-col items-center -mt-5 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white w-12 h-12 rounded-full items-center justify-center shadow-lg active:scale-95 transition-transform">
+      <span class="text-xl">📸</span>
+    </button>
+    <button onclick="window.UniApp.toggleWishlistFilter()" class="flex flex-col items-center gap-0.5 text-slate-500">
+      <span class="text-lg">❤️</span>
+      <span class="text-[10px]">我的收藏</span>
+    </button>
+    <button onclick="window.UniApp.openUserCenterModal()" class="flex flex-col items-center gap-0.5 text-slate-500">
+      <span class="text-lg">👤</span>
+      <span class="text-[10px]">個人中心</span>
+    </button>
+  </nav>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-500 dark:text-slate-400">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+      <div>
+        <p class="font-bold text-slate-700 dark:text-slate-300">全國大學生二手物品交換與買賣平台 (UniSwap AI)</p>
+        <p class="text-[11px] mt-0.5 text-slate-400">
+          Vibe Coding 功能規劃與進階作業整合版 · 實作成果完全符合 PRD 與 UIUX 規範
+        </p>
+      </div>
+      <div class="flex items-center gap-4 text-xs font-semibold">
+        <a href="test.html" class="text-indigo-600 hover:underline">🧪 執行自動化測試 (test.html)</a>
+        <a href="PRD.md" class="hover:text-slate-700">PRD 規格</a>
+        <a href="UIUX.md" class="hover:text-slate-700">UIUX 規範</a>
+        <button onclick="window.UniApp.openAdminModal()" class="hover:text-indigo-600">管理後台</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Entry Script -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
