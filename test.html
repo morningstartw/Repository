@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>UniSwap Automated Test Runner</title>
+</head>
+<body>
+  <h1>Test Suite Results</h1>
+  <pre id="output">Running...</pre>
+
+  <script type="module">
+    import { Store } from './js/store.js';
+    import { runStoreTests } from './tests/store.test.js';
+
+    let allResults = [];
+    const storeResults = runStoreTests(Store);
+    allResults = allResults.concat(storeResults);
+
+    const output = document.getElementById('output');
+    output.textContent = JSON.stringify(allResults, null, 2);
+    console.log('TEST_RESULTS_READY', JSON.stringify(allResults));
+  </script>
+</body>
+</html>
